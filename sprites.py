@@ -1,0 +1,418 @@
+# ランダム値生成用
+import random
+
+# Pygameライブラリ
+import pygame
+
+# 画像読み込み・画面サイズ定数
+from utils import load_image, SCREEN
+
+
+# =============================
+# 登場する人物/物/背景のクラス定義
+# =============================
+
+
+class Background:
+    """
+    ゲーム画面の背景を管理するクラス。
+    ・空の画像を読み込み、描画する。
+
+    """
+
+    def __init__(self, majo):
+        # self.majo = majo  # 魔女インスタンス。魔女の位置に応じて山の表示を動かす。
+        self.sky_image = load_image(
+            "bg_natural_sky.jpg", SCREEN.size
+        )  # 空の画像を画面サイズで読み込み
+        # self.mount_image = load_image(
+        #     "bg_natural_mount_800x800.png"
+        # )  # 山の画像を読み込み
+        # self.mount_rect = (
+        #     self.mount_image.get_rect()
+        # )  # 山画像の矩形情報（幅・高さなど）
+        # self.ground_image = pygame.Surface(
+        #     (SCREEN.width, 20)
+        # )  # 地面用のサーフェス（矩形画像）を生成
+        # self.ground_image.fill((0, 128, 64))  # 地面の色を緑色(RGB)で塗りつぶす
+        # self.ground_rect = self.ground_image.get_rect()  # 地面の矩形情報
+        # self.ground_rect.bottom = SCREEN.bottom  # 地面を画面下端に配置（y座標調整）
+
+    # def update(self):
+    #     # 魔女のx座標に応じて山の表示位置を計算し、パララックス効果を演出
+    #     # 画面幅を超える山画像を、魔女の移動に合わせて左右にスクロールさせる
+    #     self.mount_image_x = (
+    #         (self.mount_rect.width - SCREEN.width)
+    #         / SCREEN.width
+    #         * self.majo.rect.centerx
+    #     )
+
+    def draw(self, screen):
+        # 背景（空・山・地面）を画面に描画する
+        # 空は常に画面全体に描画
+        screen.blit(self.sky_image, SCREEN)  # 空
+        # # 山は魔女の位置に応じて左右にスクロール
+        # screen.blit(self.mount_image, (-self.mount_image_x, -118))  # 山
+        # # 地面は画面下端に固定して描画
+        # screen.blit(self.ground_image, self.ground_rect)  # 地面
+
+
+class Majo(pygame.sprite.Sprite):
+    """
+    魔女キャラクターのスプライトクラス。
+    ・上下移動、アニメーション、画面端制御を担当。
+    ・ライフや得点などの定数もここで管理。
+    継承: pygame.sprite.Sprite
+    """
+
+    IMAGE_WIDTH, IMAGE_HEIGHT = (32, 32)  # 1コマの幅・高さ（ピクセル）
+    # LEFT, RIGHT = (1, 2)  # 向き（左:1, 右:2）
+    SPEED = 5  # 移動速度（ピクセル/フレーム）
+    # IMAGE_NUMS = 3  # アニメーションコマ数
+    MINUS_LIFE = 1  # 爆弾被弾時のライフ減少量
+
+    def __init__(self):
+        # スプライトの初期化（所属グループに登録）
+        # self.containersはmain.pyでSpriteグループとしてセットされる
+        pygame.sprite.Sprite.__init__(self, self.containers)
+        self.image = load_image("majo_level2_small.png")  # 魔女のスプライト画像（複数コマ）
+        # self.image_dir = Majo.LEFT  # 初期向き（左）
+        # self.image_off = 0  # アニメーション用のコマ番号
+        # # 初期画像（左向き・最初のコマ）を切り出し
+        # self.image = self.images.subsurface((0, 0, Majo.IMAGE_WIDTH, Majo.IMAGE_HEIGHT))
+        # 位置情報（pygame.Rect）を初期化
+        self.rect = pygame.Rect((0, 0, Majo.IMAGE_WIDTH, Majo.IMAGE_HEIGHT))
+        self.rect.left = SCREEN.left  # 画面左に配置
+        # 画面真ん中に配置
+        self.rect.centery = SCREEN.centery  # y座標は画面中央
+        # self.rect.bottom = SCREEN.bottom - 20  # 画面下から20px上に配置
+
+    def move_left(self):
+        # 左キーが押されたときの移動処理
+        self.rect.move_ip(-Majo.SPEED, 0)  # x座標を左に移動
+        # self.image_dir = Majo.LEFT  # 向きを左に
+        self.move()  # 画像（アニメーション）更新
+
+    def move_right(self):
+        # 右キーが押されたときの移動処理
+        self.rect.move_ip(Majo.SPEED, 0)  # x座標を右に移動
+        # self.image_dir = Majo.RIGHT  # 向きを右に
+        self.move()  # 画像（アニメーション）更新
+
+    def move_up(self):
+        # 上キーが押されたときの移動処理
+        self.rect.move_ip(0, -Majo.SPEED)  # y座標を上に移動
+        self.move()  # 画像（アニメーション）更新
+
+    def move_down(self):
+        # 下キーが押されたときの移動処理
+        self.rect.move_ip(0, Majo.SPEED)  # y座標を下に移動
+        self.move()  # 画像（アニメーション）更新
+
+    def move(self):
+        # 画面外に出ないように位置を制限（clamp_ipで自動補正）
+        self.rect.clamp_ip(SCREEN)
+        # # アニメーション用の画像切り替え（歩く動作）
+        # self.image_off = (self.image_off + 1) % Majo.IMAGE_NUMS  # コマ番号を進める
+        # # 向きは一定（例: 左向き）で固定
+        # self.image = self.images.subsurface(
+        #     (
+        #         self.image_off * Majo.IMAGE_WIDTH,
+        #         Majo.LEFT * Majo.IMAGE_HEIGHT,  # 常に左向き
+        #         Majo.IMAGE_WIDTH,
+        #         Majo.IMAGE_HEIGHT,
+        #     )
+        # )
+
+    def update(self):
+        # 魔女の自動更新処理（現状は何もしない。将来拡張用）
+        pass
+
+
+class Beam(pygame.sprite.Sprite):
+    """
+    魔女が発射するビームのスプライトクラス。
+    ・ビームの発射、移動、画面外での消滅、発射数カウントを担当。
+    ・ビームの爆発アニメ用定数もここで管理。
+    継承: pygame.sprite.Sprite
+    """
+
+    SPEED = 5  # ビームの移動速度（ピクセル/フレーム）
+    counter = 0  # 発射中のビーム数（最大2発まで）
+    EXP_IMAGE_WIDTH, EXP_IMAGE_HEIGHT = 120, 120  # 爆発画像の1コマの幅・高さ（ピクセル）
+    EXP_IMAGE_OFFSET = 5  # 爆発アニメのコマ数
+    EXP_ANIME_COUNT = 5  # 爆発アニメの繰り返し回数
+
+    def __init__(self, majo):
+        # スプライトの初期化（所属グループに登録）
+        # majo: 発射元の魔女インスタンス
+        pygame.sprite.Sprite.__init__(self, self.containers)
+        self.majo = majo  # 発射元の魔女
+        # ビーム画像はmain.pyでBeam.imageとしてセットされる
+        self.rect = self.image.get_rect()  # ビーム画像の矩形情報
+        self.rect.right = self.majo.rect.right + 32  # 魔女の右x座標から発射
+        self.rect.centery = self.majo.rect.centery  # 魔女の真ん中y座標から発射
+        Beam.counter.val += 1  # 発射中ビーム数をカウント（最大2発まで）
+        Beam.sound.play()  # 発射音再生
+
+    def update(self):
+        # 毎フレーム右方向に移動
+        self.rect.right += Beam.SPEED
+        # 画面外（右端）に出たら消滅し、カウンタも減らす
+        if self.rect.right > SCREEN.right:
+            Beam.counter.val -= 1  # 画面外でカウンタ減少
+            self.kill()  # ビーム消滅
+
+
+class Dragon(pygame.sprite.Sprite):
+    """
+    ドラゴンのスプライトクラス。
+    ・上下移動、炎投下、爆発アニメ、スコア管理を担当。
+    ・爆弾の投下確率や爆発アニメの定数もここで管理。
+    継承: pygame.sprite.Sprite
+    """
+
+    IMAGE_WIDTH, IMAGE_HEIGHT = 64, 28  # ドラゴン画像の1コマの幅・高さ（ピクセル）
+    SPEED = 5  # 移動速度（ピクセル/フレーム）
+    # LEFT, RIGHT = 0, 1  # 向き（左:0, 右:1）
+    BOMB_PROB = 0.03  # 爆弾投下確率（3%）
+    MINUS_POINT = 5  # ドラゴン撃破時の減点
+    MAX_HP = 50  # ドラゴンの最大HP
+    # 爆発アニメ
+    EXP_IMAGE_WIDTH, EXP_IMAGE_HEIGHT = 320, 120  # 爆発画像の1コマの幅・高さ（ピクセル）
+    EXP_IMAGE_OFFSET = 8  # 爆発アニメのコマ数
+    EXP_ANIME_COUNT = 10  # 爆発アニメの繰り返し回数
+
+    def __init__(self):
+        # スプライトの初期化（所属グループに登録）
+        # self.containersはmain.pyでSpriteグループとしてセットされる
+        pygame.sprite.Sprite.__init__(self, self.containers)
+        self.image = load_image("dragon_small.png")
+        self.rect = self.image.get_rect()  # 位置情報
+        self.rect.center = SCREEN.center  # 初期位置（画面中央）
+        self.speed = Dragon.SPEED  # 移動速度
+        # self.dir = Dragon.LEFT  # 初期向き
+        self.hp = Dragon.MAX_HP  # 初期HP（最大値）
+
+    def update(self):
+        # # 毎フレーム上下に移動
+        # self.rect.move_ip(0, self.speed)
+        # # 画面端に到達したら進行方向を反転
+        # if self.rect.top <= SCREEN.top or self.rect.bottom >= SCREEN.bottom:
+        #     self.speed = -self.speed  # 方向転換
+        # self.rect.clamp_ip(SCREEN)  # 画面外に出ないよう制限
+        # # 画像の向きは一定（例: 左向き）で固定
+        # self.image = Dragon.images.subsurface(
+        #     0, 0, Dragon.IMAGE_WIDTH, Dragon.IMAGE_HEIGHT
+        # )
+
+        # # 一定確率で爆弾を投下（BOMB_PROBで制御）
+        # if random.random() < Dragon.BOMB_PROB:
+        #     # # ステージが進むと爆弾の横方向速度もランダムで増加
+        #     # dx = (
+        #     #     0 if Majo.stage.val <= 2 else (random.random() * 2.0 - 1.0) * self.speed
+        #     # )
+        #     dx = 0  # 横方向の移動量（ステージ1は固定）
+        #     Bomb(self, dx)  # 爆弾生成
+
+        # ドラゴンは中央に固定（移動なし）
+        # 四方八方に爆弾を投下
+        if random.random() < Dragon.BOMB_PROB:
+            # 8方向ベクトル
+            directions = [
+                (-1, 0), (1, 0), (0, -1), (0, 1),
+                (-1, -1), (1, -1), (-1, 1), (1, 1)
+            ]
+            dx, dy = random.choice(directions)
+            Bomb(self, dx * Bomb.SPEED, dy * Bomb.SPEED)
+
+        # ドラゴンの爆破シーン（スコア0で爆発アニメ＆消滅）
+        if self.hp == 0:
+            Explosion(
+                Dragon.exp_images,
+                self.rect.center,
+                (Dragon.EXP_IMAGE_WIDTH, Dragon.EXP_IMAGE_HEIGHT),
+                Dragon.EXP_IMAGE_OFFSET,
+                Dragon.EXP_ANIME_COUNT,
+                Dragon.exp_sound,
+            )
+            self.kill()
+            return
+
+
+class Explosion(pygame.sprite.Sprite):
+    """
+    爆発アニメーションのスプライトクラス。
+    ・爆発画像のコマ切り替え、消滅処理、効果音再生を担当。
+    ・横長画像/縦長画像どちらにも対応。
+    継承: pygame.sprite.Sprite
+    Args:
+        images: 爆発アニメ画像
+        start_pos: 爆発の中心座標
+        image_size: 1コマのサイズ
+        max_offset: コマ数
+        max_anime_count: アニメ繰り返し数
+        exp_sound: 爆発音
+    """
+
+    def __init__(
+        self, images, start_pos, image_size, max_offset, max_anime_count, exp_sound
+    ):
+        # スプライトの初期化（所属グループに登録）
+        # images: 爆発アニメ画像（横長 or 縦長）
+        # start_pos: 爆発の中心座標
+        # image_size: 1コマの幅・高さ
+        # max_offset: コマ数
+        # max_anime_count: アニメ繰り返し数
+        # exp_sound: 爆発音
+        pygame.sprite.Sprite.__init__(self, self.containers)
+        self.images = images  # 爆発画像
+        self.images_rect = self.images.get_rect()  # 画像全体の矩形
+        self.max_offset = max_offset  # 爆発コマ数
+        self.offset = 0  # 現在のコマ番号
+        self.max_anime_count = max_anime_count  # アニメーション繰り返し数
+        self.anime_count = 0  # 現在のアニメカウント
+        self.sizex, self.sizey = image_size  # 1コマのサイズ
+        # 横長画像か縦長画像かで切り出し方法を変える
+        if self.images_rect.width > self.images_rect.height:
+            # 横長画像の場合（横方向にコマが並ぶ）
+            self.image = self.images.subsurface(
+                (self.offset * self.sizex, 0, self.sizex, self.sizey)
+            )
+        else:
+            # 縦長画像の場合（縦方向にコマが並ぶ）
+            self.image = self.images.subsurface(
+                (0, self.offset * self.sizey, self.sizex, self.sizey)
+            )
+
+        self.rect = self.image.get_rect()  # 爆発の位置
+        self.rect.center = start_pos  # 爆発の中心座標
+        exp_sound.play()  # 爆発音再生
+
+    def update(self):
+        # 毎フレーム呼ばれる。アニメーションカウントを進める
+        self.anime_count = (self.anime_count + 1) % self.max_anime_count
+        if self.anime_count == 0:
+            self.offset += 1  # コマを進める
+            if self.offset == self.max_offset:
+                self.offset = 0  # コマリセット
+                self.kill()  # 爆発スプライトを消滅させる
+                return
+        # 横長画像か縦長画像かで切り出し方法を変える
+        if self.images_rect.width > self.images_rect.height:
+            # 横長画像の場合
+            self.image = self.images.subsurface(
+                (self.offset * self.sizex, 0, self.sizex, self.sizey)
+            )
+        else:
+            # 縦長画像の場合
+            self.image = self.images.subsurface(
+                (0, self.offset * self.sizey, self.sizex, self.sizey)
+            )
+
+
+class Bomb(pygame.sprite.Sprite):
+    """
+    ドラゴンが落とす爆弾のスプライトクラス。
+    ・爆弾の落下、爆発、アニメーションを担当。
+    ・爆弾の色やアニメコマ数もここで管理。
+    継承: pygame.sprite.Sprite
+    Args:
+        dragon: 爆弾を落とすドラゴンインスタンス
+        dx: 横方向の移動量
+    """
+
+    IMAGE_COLORS, IMAGE_OFFSET = 4, 3  # 爆弾の色数とアニメコマ数
+    IMAGE_WIDTH, IMAGE_HEIGHT = 112, 64  # 1コマの幅・高さ（ピクセル）
+    SPEED = 5  # 爆弾の落下速度（ピクセル/フレーム）
+    # 爆発アニメ
+    EXP_IMAGE_WIDTH, EXP_IMAGE_HEIGHT = 120, 120  # 爆発画像の1コマの幅・高さ（ピクセル）
+    EXP_IMAGE_OFFSET = 7  # 爆発アニメのコマ数
+    EXP_ANIME_COUNT = 5  # 爆発アニメの繰り返し回数
+
+    def __init__(self, dragon, dx, dy):
+        # スプライトの初期化（所属グループに登録）
+        # dragon: 爆弾を落とすドラゴンインスタンス
+        # dx: 横方向の移動量
+        pygame.sprite.Sprite.__init__(self, self.containers)
+        # 爆弾の色をランダムで決定（4色）
+        self.image_color = int(random.random() * Bomb.IMAGE_COLORS)
+        self.image_off = 0  # アニメーション用オフセット
+        # 爆弾画像（色・コマ番号で切り出し）
+        self.image = Bomb.images.subsurface(
+            (
+                self.image_color * Bomb.IMAGE_WIDTH,
+                self.image_off * Bomb.IMAGE_HEIGHT,
+                Bomb.IMAGE_WIDTH,
+                Bomb.IMAGE_HEIGHT,
+            )
+        )
+        self.rect = self.image.get_rect()  # 位置情報
+        self.rect.center = dragon.rect.center  # ドラゴン中央から発射
+        self.dx = dx  # 上下方向の移動量
+        self.dy = dy
+
+    def update(self):
+        # 毎フレーム四方八方に攻撃
+        self.rect.move_ip(self.dx, self.dy)
+        # 画面外に出たら爆発
+        if (self.rect.left < SCREEN.left or self.rect.right > SCREEN.right or
+                self.rect.top < SCREEN.top or self.rect.bottom > SCREEN.bottom):
+            Explosion(
+                Bomb.exp_images,
+                self.rect.center,
+                (Bomb.EXP_IMAGE_WIDTH, Bomb.EXP_IMAGE_HEIGHT),
+                Bomb.EXP_IMAGE_OFFSET,
+                Bomb.EXP_ANIME_COUNT,
+                Bomb.exp_sound,
+            )
+            self.kill()
+            return
+        # アニメーション用の画像切り替え（コマ番号を進める）
+        self.image_off = (self.image_off + 1) % Bomb.IMAGE_OFFSET
+        self.image = Bomb.images.subsurface(
+            (
+                self.image_color * Bomb.IMAGE_WIDTH,
+                self.image_off * Bomb.IMAGE_HEIGHT,
+                Bomb.IMAGE_WIDTH,
+                Bomb.IMAGE_HEIGHT,
+            )
+        )
+
+
+class Point(pygame.sprite.Sprite):
+    """
+    得点やライフ減少などのポイント表示用スプライトクラス。
+    ・画面上に一時的に数値を表示し、一定時間後に自動で消滅。
+    ・主に衝突時の得点やライフ減少の視覚的フィードバックに使用。
+    継承: pygame.sprite.Sprite
+    Args:
+        point: 表示する数値
+        start_pos: 表示開始位置
+    """
+
+    FONT_SIZE = 32
+    RED = (255, 0, 0)
+    MAX_ANIME_COUNT = 50
+
+    def __init__(self, point, start_pos):
+        # スプライトの初期化（所属グループに登録）
+        # point: 表示する数値
+        # start_pos: 表示開始位置（x, y）
+        pygame.sprite.Sprite.__init__(self, self.containers)
+        self.point = point  # 表示するポイント値（例: -1, -5, +10など）
+        self.font = pygame.font.SysFont(
+            None, Point.FONT_SIZE
+        )  # フォント設定（デフォルト）
+        # 数値を赤色で画像化（例: "-5"）
+        self.image = self.font.render("-" + str(self.point), False, Point.RED)
+        self.rect = self.image.get_rect()  # 画像の矩形情報
+        self.rect.center = start_pos  # 表示位置（中心座標）
+        self.anime_count = 0  # アニメーションカウント（表示経過フレーム数）
+
+    def update(self):
+        # 毎フレーム呼ばれる。一定時間経過で自動消滅
+        self.anime_count += 1
+        if self.anime_count == Point.MAX_ANIME_COUNT:
+            self.kill()  # スプライトを消滅させる
+            return
