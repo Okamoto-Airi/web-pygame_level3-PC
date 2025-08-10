@@ -202,7 +202,7 @@ class Demon(pygame.sprite.Sprite):
     IMAGE_WIDTH, IMAGE_HEIGHT = 64, 28  # 魔王画像の1コマの幅・高さ（ピクセル）
     SPEED = 5  # 移動速度（ピクセル/フレーム）
     # LEFT, RIGHT = 0, 1  # 向き（左:0, 右:1）
-    BOMB_PROB = 0.03  # 爆弾投下確率（3%）
+    BOMB_PROB = 0.07  # 爆弾投下確率（3%）
     MINUS_POINT = 5  # 魔王撃破時の減点
     MAX_HP = 100  # 魔王の最大HP
 
