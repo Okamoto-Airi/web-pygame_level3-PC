@@ -27,7 +27,7 @@ import asyncio
 import js  # pygbag環境でのみ有効
 
 # スプライト関連クラスのインポート
-from sprites import Background, Majo, Demon, Beam, Bomb, Explosion, Point, HPBarSprite
+from sprites import Background, Majo, Demon, Beam, Bomb, Explosion, Point, HPBarSprite, EdgeRunner
 
 # ユーティリティ関数・定数のインポート
 from utils import (
@@ -44,12 +44,13 @@ from utils import (
 # =============================
 # 衝突判定関数（ゲーム内の当たり判定をまとめて管理）
 # =============================
-def collision_detection(majo, demon, beam_g, bomb_g):
+def collision_detection(majo, demon, beam_g, bomb_g, enemy_g):
     """
     ゲーム内の各種衝突判定を行う関数。
     - ビームと魔王
     - ビームと爆弾
     - 魔女と爆弾
+    - サブ敵と魔女
     それぞれの衝突時にエフェクトやスコア・ライフの更新を行う。
     """
     # --- ビームと魔王の衝突判定 ---
@@ -124,6 +125,17 @@ def collision_detection(majo, demon, beam_g, bomb_g):
         if Majo.life.val == 0:
             majo.kill()  # ライフ0で魔女消滅
 
+    # --- サブ敵と魔女の衝突判定 ---
+    if pygame.sprite.spritecollideany(majo, enemy_g):
+        if not majo.invincible_frame:
+            Majo.life.val -= Majo.MINUS_LIFE  # ライフ減少
+            Point(Majo.MINUS_LIFE, majo.rect.center)  # ライフ減少表示
+            if Majo.life.val == 0:
+                majo.kill()
+            majo.invincible_frame = True  # 次フレーム以降の無敵状態フラグ
+    else:
+        majo.invincible_frame = False  # 衝突なしならフラグ解除
+
 
 def stop_all_sounds(opening_sound, play_sound):
     """全てのSoundインスタンスを停止する関数
@@ -175,6 +187,8 @@ async def main():
     Score.containers = group  # スコア表示の所属グループ
     TimerSprite.containers = group  # タイマーの所属グループ
     HPBarSprite.containers = group  # 魔王HPバーの所属グループ
+    enemy_g = pygame.sprite.Group()
+    EdgeRunner.containers = group, enemy_g  # エッジランナーの所属グループ
 
     # 制限時間
     TIME_LIMIT = 60  # 制限時間（秒）
@@ -259,7 +273,7 @@ async def main():
 
         # 衝突判定（ゲームプレイ中かつ魔王が存在する場合のみ）
         if game_status == PLAY and demon is not None:
-            collision_detection(majo, demon, beam_g, bomb_g)  # 衝突判定処理
+            collision_detection(majo, demon, beam_g, bomb_g, enemy_g)  # 衝突判定処理
 
         # 背景・スプライトを画面に描画
         bg_img.draw(screen)  # 背景描画
@@ -348,6 +362,8 @@ async def main():
                 if event.key == K_SPACE and game_status == INIT:
                     game_status = PLAY  # プレイ状態へ
                     demon = Demon()  # 魔王生成
+                    enemy = EdgeRunner(speed=4, clockwise=False)  # サブ敵生成
+                    enemy_g.add(enemy)
                     # 魔王のHPバー用スプライト
                     hp_bar_sprite = HPBarSprite(demon)
                     hp_bar_sprite.update()
@@ -358,9 +374,12 @@ async def main():
                 elif event.key == K_r and game_status in (GAMEOVER, CLEAR):
                     game_status = PLAY  # プレイ状態へ
                     demon.kill()  # 既存魔王削除
+                    enemy.kill()  # 既存サブ敵削除
                     majo.kill()  # 既存魔女削除
                     hp_bar_sprite.kill()  # 既存HPバー削除
                     demon = Demon()  # 新魔王生成
+                    enemy = EdgeRunner(speed=4, clockwise=False)  # サブ敵生成
+                    enemy_g.add(enemy)
                     hp_bar_sprite = HPBarSprite(demon)
                     hp_bar_sprite.update()  # HPバー更新
                     majo = Majo()  # 新魔女生成

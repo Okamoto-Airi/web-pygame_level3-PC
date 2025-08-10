@@ -310,6 +310,45 @@ class Demon(pygame.sprite.Sprite):
             return
 
 
+class EdgeRunner(pygame.sprite.Sprite):
+    def __init__(self, speed=3, clockwise=True):
+        super().__init__(self.containers)
+        self.image = load_image("sub-demon_small.png")
+        self.rect = self.image.get_rect()  # 位置情報
+
+        self.speed = speed
+        self.clockwise = clockwise
+
+        # 初期位置（左上から下へ）
+        self.rect.topleft = (0, 0)
+        self.state = 1  # 0=右, 1=下, 2=左, 3=上
+
+    def update(self):
+        screen_rect = pygame.Rect((0, 40, 640, 440))
+
+        # 移動
+        if self.state == 0:  # 右
+            self.rect.x += self.speed
+            if self.rect.right >= screen_rect.right:
+                self.rect.right = screen_rect.right
+                self.state = (self.state + (1 if self.clockwise else -1)) % 4
+        elif self.state == 1:  # 下
+            self.rect.y += self.speed
+            if self.rect.bottom >= screen_rect.bottom:
+                self.rect.bottom = screen_rect.bottom
+                self.state = (self.state + (1 if self.clockwise else -1)) % 4
+        elif self.state == 2:  # 左
+            self.rect.x -= self.speed
+            if self.rect.left <= screen_rect.left:
+                self.rect.left = screen_rect.left
+                self.state = (self.state + (1 if self.clockwise else -1)) % 4
+        elif self.state == 3:  # 上
+            self.rect.y -= self.speed
+            if self.rect.top <= screen_rect.top:
+                self.rect.top = screen_rect.top
+                self.state = (self.state + (1 if self.clockwise else -1)) % 4
+
+
 class Explosion(pygame.sprite.Sprite):
     """
     爆発アニメーションのスプライトクラス。
