@@ -27,7 +27,7 @@ import asyncio
 import js  # pygbag環境でのみ有効
 
 # スプライト関連クラスのインポート
-from sprites import Background, Majo, Dragon, Beam, Bomb, Explosion, Point, HPBarSprite
+from sprites import Background, Majo, Demon, Beam, Bomb, Explosion, Point, HPBarSprite
 
 # ユーティリティ関数・定数のインポート
 from utils import (
@@ -44,18 +44,18 @@ from utils import (
 # =============================
 # 衝突判定関数（ゲーム内の当たり判定をまとめて管理）
 # =============================
-def collision_detection(majo, dragon, beam_g, bomb_g):
+def collision_detection(majo, demon, beam_g, bomb_g):
     """
     ゲーム内の各種衝突判定を行う関数。
-    - ビームとドラゴン
+    - ビームと魔王
     - ビームと爆弾
     - 魔女と爆弾
     それぞれの衝突時にエフェクトやスコア・ライフの更新を行う。
     """
-    # --- ビームとドラゴンの衝突判定 ---
+    # --- ビームと魔王の衝突判定 ---
     beam_collided = pygame.sprite.spritecollide(
-        dragon, beam_g, True
-    )  # ドラゴンに当たったビームを取得
+        demon, beam_g, True
+    )  # 魔王に当たったビームを取得
     if beam_collided:
         # 爆発エフェクト生成
         Explosion(
@@ -67,26 +67,42 @@ def collision_detection(majo, dragon, beam_g, bomb_g):
             Beam.exp_sound,
         )
         Beam.counter.val -= 1  # ビーム発射数を減らす
-        Point(Dragon.MINUS_POINT, dragon.rect.center)  # 得点表示
-        dragon.hp -= Dragon.MINUS_POINT  # ドラゴンスコア減少
+        Point(Demon.MINUS_POINT, demon.rect.center)  # 得点表示
+        demon.hp -= Demon.MINUS_POINT  # 魔王スコア減少
 
     # --- ビームと爆弾の衝突判定 ---
     group_collided = pygame.sprite.groupcollide(
-        bomb_g, beam_g, True, True
+        bomb_g, beam_g, False, True  # 爆弾は消さない
     )  # 爆弾とビームの衝突
     # group_collided: {爆弾: [当たったビーム, ...], ...}
     if group_collided:
         for bomb, beams in group_collided.items():
-            for beam in beams:
-                # 爆発エフェクト生成
-                Explosion(
-                    Beam.exp_images,
-                    bomb.rect.center,
-                    (Beam.EXP_IMAGE_WIDTH, Beam.EXP_IMAGE_HEIGHT),
-                    Beam.EXP_IMAGE_OFFSET,
-                    Beam.EXP_ANIME_COUNT,
-                    Beam.exp_sound,
-                )
+            # for beam in beams:
+            #     # 爆発エフェクト生成
+            #     Explosion(
+            #         Beam.exp_images,
+            #         bomb.rect.center,
+            #         (Beam.EXP_IMAGE_WIDTH, Beam.EXP_IMAGE_HEIGHT),
+            #         Beam.EXP_IMAGE_OFFSET,
+            #         Beam.EXP_ANIME_COUNT,
+            #         Beam.exp_sound,
+            #     )
+            if getattr(bomb, "invincible", False):
+                # 無敵爆弾は何もしない
+                continue
+            else:
+                # 通常爆弾は消す
+                bomb.kill()
+                for beam in beams:
+                    # 爆発エフェクト生成
+                    Explosion(
+                        Beam.exp_images,
+                        bomb.rect.center,
+                        (Beam.EXP_IMAGE_WIDTH, Beam.EXP_IMAGE_HEIGHT),
+                        Beam.EXP_IMAGE_OFFSET,
+                        Beam.EXP_ANIME_COUNT,
+                        Beam.exp_sound,
+                    )
         Beam.counter.val -= 1  # ビーム発射数を減らす
 
     # --- 魔女と爆弾の衝突判定 ---
@@ -121,7 +137,7 @@ def stop_all_sounds(opening_sound, play_sound):
     play_sound.stop()
     Beam.sound.stop()
     Beam.exp_sound.stop()
-    Dragon.exp_sound.stop()
+    Demon.exp_sound.stop()
     Bomb.exp_sound.stop()
     pygame.mixer.stop()
 
@@ -152,13 +168,13 @@ async def main():
     beam_g = pygame.sprite.Group()  # ビームグループ
     Majo.containers = group  # 魔女スプライトの所属グループ
     Beam.containers = group, beam_g  # ビームスプライトの所属グループ
-    Dragon.containers = group  # ドラゴンスプライトの所属グループ
+    Demon.containers = group  # 魔王スプライトの所属グループ
     Bomb.containers = group, bomb_g  # 爆弾スプライトの所属グループ
     Explosion.containers = group  # 爆発エフェクトの所属グループ
     Point.containers = group  # 得点表示の所属グループ
     Score.containers = group  # スコア表示の所属グループ
     TimerSprite.containers = group  # タイマーの所属グループ
-    HPBarSprite.containers = group  # ドラゴンHPバーの所属グループ
+    HPBarSprite.containers = group  # 魔王HPバーの所属グループ
 
     # 制限時間
     TIME_LIMIT = 60  # 制限時間（秒）
@@ -177,9 +193,9 @@ async def main():
         (0, 1): load_image("majo_beam_down.png"),
     }
     # Dragon.images = load_image("dragon_small.png", (128, 128))  # UFO画像
-    Dragon.exp_images = load_image("ufo_fire.png", (320, 960))  # UFO爆発画像
-    Dragon.exp_sound = load_sound("se_maoudamashii_explosion08.ogg")  # UFO爆発音
-    Dragon.exp_sound.set_volume(0.03)  # UFO爆発音の音量調整（0.0～1.0）
+    Demon.exp_images = load_image("ufo_fire.png", (320, 960))  # UFO爆発画像
+    Demon.exp_sound = load_sound("se_maoudamashii_explosion08.ogg")  # UFO爆発音
+    Demon.exp_sound.set_volume(0.03)  # UFO爆発音の音量調整（0.0～1.0）
     # Bomb.images = load_image("ufo_bomb_left.png")  # 爆弾画像
     Bomb.exp_images = load_image("bomb_fire.png")  # 爆弾爆発画像
     Bomb.exp_sound = load_sound("se_maoudamashii_explosion05.ogg")  # 爆弾爆発音
@@ -221,7 +237,7 @@ async def main():
     # 魔女・背景のインスタンス生成
     majo = Majo()  # 魔女キャラクター生成
     bg_img = Background(majo)  # 背景生成（魔女の参照渡し）
-    dragon = None  # ドラゴンはゲーム開始時に生成するため、初期値はNone
+    demon = None  # 魔王はゲーム開始時に生成するため、初期値はNone
 
     start_ticks = pygame.time.get_ticks()  # ゲーム開始時の時刻（ミリ秒）
 
@@ -241,15 +257,15 @@ async def main():
         # bg_img.update()  # 背景の更新
         group.update()  # 全スプライトの更新
 
-        # 衝突判定（ゲームプレイ中かつドラゴンが存在する場合のみ）
-        if game_status == PLAY and dragon is not None:
-            collision_detection(majo, dragon, beam_g, bomb_g)  # 衝突判定処理
+        # 衝突判定（ゲームプレイ中かつ魔王が存在する場合のみ）
+        if game_status == PLAY and demon is not None:
+            collision_detection(majo, demon, beam_g, bomb_g)  # 衝突判定処理
 
         # 背景・スプライトを画面に描画
         bg_img.draw(screen)  # 背景描画
         group.draw(screen)  # スプライト描画
 
-        # # 敵のHPバー描画（ドラゴンがいる場合のみ）
+        # # 敵のHPバー描画（魔王がいる場合のみ）
         # if dragon and game_status == PLAY:
         #     draw_hp_bar(screen, dragon, pos=(SCREEN.centerx - 100, 8))
 
@@ -306,8 +322,8 @@ async def main():
             play_sound.stop()  # プレイBGM停止
             # opening_sound.play(-1)  # タイトルBGM再生
             gameover_sound.play()  # ゲームオーバー音再生
-        # ドラゴンスコアが0になったらクリア
-        if game_status == PLAY and dragon.hp == 0:
+        # 魔王スコアが0になったらクリア
+        if game_status == PLAY and demon.hp == 0:
             game_status = CLEAR  # クリア状態へ
             play_sound.stop()  # プレイBGM停止
             # opening_sound.play(-1)  # タイトルBGM再生
@@ -331,9 +347,9 @@ async def main():
                 # タイトル画面でスペースキーでゲーム開始
                 if event.key == K_SPACE and game_status == INIT:
                     game_status = PLAY  # プレイ状態へ
-                    dragon = Dragon()  # ドラゴン生成
-                    # ドラゴンのHPバー用スプライト
-                    hp_bar_sprite = HPBarSprite(dragon)
+                    demon = Demon()  # 魔王生成
+                    # 魔王のHPバー用スプライト
+                    hp_bar_sprite = HPBarSprite(demon)
                     hp_bar_sprite.update()
                     opening_sound.stop()  # タイトルBGM停止
                     play_sound.play(-1)  # プレイBGM再生
@@ -341,11 +357,11 @@ async def main():
                 # ゲームクリア・ゲームオーバー画面でRキーでリトライ
                 elif event.key == K_r and game_status in (GAMEOVER, CLEAR):
                     game_status = PLAY  # プレイ状態へ
-                    dragon.kill()  # 既存ドラゴン削除
+                    demon.kill()  # 既存魔王削除
                     majo.kill()  # 既存魔女削除
                     hp_bar_sprite.kill()  # 既存HPバー削除
-                    dragon = Dragon()  # 新ドラゴン生成
-                    hp_bar_sprite = HPBarSprite(dragon)
+                    demon = Demon()  # 新魔王生成
+                    hp_bar_sprite = HPBarSprite(demon)
                     hp_bar_sprite.update()  # HPバー更新
                     majo = Majo()  # 新魔女生成
                     Majo.life.reset()  # ライフリセット
@@ -368,7 +384,7 @@ async def main():
                     # または前のページに戻る
                     js.eval("window.history.back()")
         # 障害物リスト
-        obstacles = [dragon]  # [dragon, enemy1, enemy2, wall1, ...]
+        obstacles = [demon]  # [demon, enemy1, enemy2, wall1, ...]
 
         # 発射方向の決定
         fire_dx, fire_dy = 0, 0

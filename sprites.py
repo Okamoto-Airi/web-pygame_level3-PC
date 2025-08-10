@@ -1,5 +1,6 @@
 # ランダム値生成用
 import random
+import math
 
 # Pygameライブラリ
 import pygame
@@ -190,20 +191,24 @@ class Beam(pygame.sprite.Sprite):
             self.kill()  # ビーム消滅
 
 
-class Dragon(pygame.sprite.Sprite):
+class Demon(pygame.sprite.Sprite):
     """
-    ドラゴンのスプライトクラス。
+    魔王のスプライトクラス。
     ・上下移動、炎投下、爆発アニメ、スコア管理を担当。
     ・爆弾の投下確率や爆発アニメの定数もここで管理。
     継承: pygame.sprite.Sprite
     """
 
-    IMAGE_WIDTH, IMAGE_HEIGHT = 64, 28  # ドラゴン画像の1コマの幅・高さ（ピクセル）
+    IMAGE_WIDTH, IMAGE_HEIGHT = 64, 28  # 魔王画像の1コマの幅・高さ（ピクセル）
     SPEED = 5  # 移動速度（ピクセル/フレーム）
     # LEFT, RIGHT = 0, 1  # 向き（左:0, 右:1）
     BOMB_PROB = 0.03  # 爆弾投下確率（3%）
-    MINUS_POINT = 5  # ドラゴン撃破時の減点
-    MAX_HP = 100  # ドラゴンの最大HP
+    MINUS_POINT = 5  # 魔王撃破時の減点
+    MAX_HP = 100  # 魔王の最大HP
+
+    RADIUS = 60  # 円運動の半径（ピクセル）
+    ANGLE_SPEED = 0.05  # 1フレームあたりの角度変化（ラジアン）
+
     # 爆発アニメ
     EXP_IMAGE_WIDTH, EXP_IMAGE_HEIGHT = (
         320,
@@ -216,12 +221,14 @@ class Dragon(pygame.sprite.Sprite):
         # スプライトの初期化（所属グループに登録）
         # self.containersはmain.pyでSpriteグループとしてセットされる
         pygame.sprite.Sprite.__init__(self, self.containers)
-        self.image = load_image("dragon_small.png")
+        self.image = load_image("demon-king_small.png")
         self.rect = self.image.get_rect()  # 位置情報
-        self.rect.center = SCREEN.center  # 初期位置（画面中央）
-        self.speed = Dragon.SPEED  # 移動速度
-        # self.dir = Dragon.LEFT  # 初期向き
-        self.hp = Dragon.MAX_HP  # 初期HP（最大値）
+        self.center = SCREEN.center  # 初期位置（画面中央）
+        self.angle = 0  # 現在の角度（ラジアン）
+        self.radius = Demon.RADIUS  # 円運動の半径
+        self.speed = Demon.SPEED  # 移動速度
+        # self.dir = Demon.LEFT  # 初期向き
+        self.hp = Demon.MAX_HP  # 初期HP（最大値）
 
     def update(self):
         # # 毎フレーム上下に移動
@@ -244,9 +251,21 @@ class Dragon(pygame.sprite.Sprite):
         #     dx = 0  # 横方向の移動量（ステージ1は固定）
         #     Bomb(self, dx)  # 爆弾生成
 
-        # ドラゴンは中央に固定（移動なし）
+        # 角度を少しずつ増やす（時計回り）
+        self.angle += Demon.ANGLE_SPEED
+        if self.angle > 2 * math.pi:
+            self.angle -= 2 * math.pi
+
+        # 円運動の座標計算
+        x = self.center[0] + self.radius * math.cos(self.angle)
+        y = self.center[1] + self.radius * math.sin(self.angle)
+
+        # rectの中心を更新
+        self.rect.center = (int(x), int(y))
+
+        # 魔王は中央に固定（移動なし）
         # 四方八方に爆弾を投下
-        if random.random() < Dragon.BOMB_PROB:
+        if random.random() < Demon.BOMB_PROB:
             # 8方向ベクトル
             directions = [
                 (-1, 0),
@@ -260,16 +279,32 @@ class Dragon(pygame.sprite.Sprite):
             ]
             dx, dy = random.choice(directions)
             Bomb(self, dx * Bomb.SPEED, dy * Bomb.SPEED)
+        elif random.random() < Demon.BOMB_PROB:
+            # 30%の確率で無敵爆弾
+            invincible = random.random() < 0.3
+            # Bomb(self, invincible=invincible)
+            directions = [
+                (-1, 0),
+                (1, 0),
+                (0, -1),
+                (0, 1),
+                (-1, -1),
+                (1, -1),
+                (-1, 1),
+                (1, 1),
+            ]
+            dx, dy = random.choice(directions)
+            Bomb(self, dx * Bomb.SPEED, dy * Bomb.SPEED, invincible=invincible)
 
-        # ドラゴンの爆破シーン（スコア0で爆発アニメ＆消滅）
+        # 魔王の爆破シーン（スコア0で爆発アニメ＆消滅）
         if self.hp == 0:
             Explosion(
-                Dragon.exp_images,
+                Demon.exp_images,
                 self.rect.center,
-                (Dragon.EXP_IMAGE_WIDTH, Dragon.EXP_IMAGE_HEIGHT),
-                Dragon.EXP_IMAGE_OFFSET,
-                Dragon.EXP_ANIME_COUNT,
-                Dragon.exp_sound,
+                (Demon.EXP_IMAGE_WIDTH, Demon.EXP_IMAGE_HEIGHT),
+                Demon.EXP_IMAGE_OFFSET,
+                Demon.EXP_ANIME_COUNT,
+                Demon.exp_sound,
             )
             self.kill()
             return
@@ -348,12 +383,12 @@ class Explosion(pygame.sprite.Sprite):
 
 class Bomb(pygame.sprite.Sprite):
     """
-    ドラゴンが落とす爆弾のスプライトクラス。
+    魔王が落とす爆弾のスプライトクラス。
     ・爆弾の落下、爆発、アニメーションを担当。
     ・爆弾の色やアニメコマ数もここで管理。
     継承: pygame.sprite.Sprite
     Args:
-        dragon: 爆弾を落とすドラゴンインスタンス
+        demon: 爆弾を落とす魔王インスタンス
     """
 
     IMAGE_COLORS, IMAGE_OFFSET = 4, 3  # 爆弾の色数とアニメコマ数
@@ -367,7 +402,7 @@ class Bomb(pygame.sprite.Sprite):
     EXP_IMAGE_OFFSET = 7  # 爆発アニメのコマ数
     EXP_ANIME_COUNT = 5  # 爆発アニメの繰り返し回数
 
-    # 8方向の画像ファイル名対応表
+    # 8方向の画像ファイル名対応表(通常爆弾)
     DIRECTION_IMAGES = {
         (-1, 0): ("ufo_bomb_left.png", 112, 64),
         (1, 0): ("ufo_bomb_right.png", 112, 64),
@@ -378,15 +413,23 @@ class Bomb(pygame.sprite.Sprite):
         # (-1, 1): ("ufo_bomb_down-left.png",),
         # (1, 1): ("ufo_bomb_down-right.png",)
     }
-
+    # 無敵爆弾の画像セット
+    INVINCIBLE_DIRECTION_IMAGES = {
+        (-1, 0): ("demon_beam_small_left.png", 111, 55),
+        (1, 0): ("demon_beam_small_right.png", 111, 55),
+        (0, -1): ("demon_beam_small_up.png", 55, 111),
+        (0, 1): ("demon_beam_small_down.png", 55, 111),
+    }
     # 画像キャッシュ
     direction_images_cache = {}
+    invincible_images_cache = {}
 
-    def __init__(self, dragon, dx, dy):
+    def __init__(self, demon, dx, dy, invincible=False):
         # スプライトの初期化（所属グループに登録）
-        # dragon: 爆弾を落とすドラゴンインスタンス
+        # demon: 爆弾を落とす魔王インスタンス
         # dx, dy: 爆弾の移動量（上下方向）
         pygame.sprite.Sprite.__init__(self, self.containers)
+        self.invincible = invincible  # 無敵爆弾フラグ
         self.dx = dx
         self.dy = dy
         # 爆弾の色をランダムで決定（4色）
@@ -399,9 +442,9 @@ class Bomb(pygame.sprite.Sprite):
         #     fname = Bomb.DIRECTION_IMAGES.get(key, "ufo_bomb_down.png")
         #     Bomb.direction_images_cache[key] = load_image(fname)
         # base_image = Bomb.direction_images_cache[key]
-        self.frames = self._load_direction_image(key)
+        self.frames = self._load_direction_image(key, invincible=self.invincible)
         self.image = self.frames[self.image_off]
-        self.rect = self.image.get_rect(center=dragon.rect.center)
+        self.rect = self.image.get_rect(center=demon.rect.center)
 
         # # 爆弾画像（色・コマ番号で切り出し）
         # self.image = base_image.subsurface(
@@ -413,27 +456,41 @@ class Bomb(pygame.sprite.Sprite):
         #     )
         # )
         # self.rect = self.image.get_rect()  # 位置情報
-        # self.rect.center = dragon.rect.center  # ドラゴン中央から発射
+        # self.rect.center = demon.rect.center  # 魔王中央から発射
         # self.dx = dx  # 上下方向の移動量
         # self.dy = dy
 
     def _sign(self, v):
         return 0 if v == 0 else (1 if v > 0 else -1)
 
-    def _load_direction_image(self, key):
+    def _load_direction_image(self, key, invincible=False):
+        # キャッシュ対象と画像セットを切り替える
+        if invincible:
+            cache = Bomb.invincible_images_cache
+            img_set = Bomb.INVINCIBLE_DIRECTION_IMAGES
+        else:
+            cache = Bomb.direction_images_cache
+            img_set = Bomb.DIRECTION_IMAGES
         # すでにキャッシュ済みならそれを返す
-        if key in Bomb.direction_images_cache:
-            return Bomb.direction_images_cache[key]
+        # if key in Bomb.direction_images_cache:
+        #     return Bomb.direction_images_cache[key]
+        if key in cache:
+            return cache[key]
 
         # 上下左右：画像からそのまま分割して返す
-        if key in Bomb.DIRECTION_IMAGES:
-            fname, w, h = Bomb.DIRECTION_IMAGES[key]
+        if key in img_set:
+            fname, w, h = img_set[key]
             sheet = load_image(fname)
             # frames = [
             #     sheet.subsurface((i * w, 0, w, h))  # 横並び前提
             #     for i in range(Bomb.IMAGE_OFFSET)
             # ]
             frames = []
+            if invincible:
+                # 無敵爆弾はアニメーションしないので画像を1枚だけ返す（フレームリストとして）
+                frames.append(sheet)  # 画像まるごと
+                cache[key] = frames
+                return frames
             # 横長画像（左右方向）はX方向、縦長画像（上下方向）はY方向で切り出す
             if w >= h:
                 # 横長（左右方向）
@@ -444,19 +501,19 @@ class Bomb(pygame.sprite.Sprite):
                 for i in range(Bomb.IMAGE_OFFSET):
                     frames.append(sheet.subsurface((i * w, 0, w, h)))
 
-            Bomb.direction_images_cache[key] = frames
+            cache[key] = frames
             return frames
 
         # 斜め方向：上下左右の画像を回転して作る
         base_key = self._get_nearest_base_direction(key)
-        base_frames = self._load_direction_image(base_key)  # 再帰的に取得
+        base_frames = self._load_direction_image(base_key, invincible)  # 再帰的に取得
 
         angle = self._get_rotation_angle(base_key, key)
         rotated_frames = [
             pygame.transform.rotate(frame, angle) for frame in base_frames
         ]
 
-        Bomb.direction_images_cache[key] = rotated_frames
+        cache[key] = rotated_frames
         return rotated_frames
 
     def _get_nearest_base_direction(self, key):
@@ -481,11 +538,11 @@ class Bomb(pygame.sprite.Sprite):
         }
         return angle_map.get((from_dir, to_dir), 0)
 
-    def _get_frame(self):
-        w, h = self.frame_size
-        x = self.image_color * w
-        y = self.image_off * h
-        return self.base_image.subsurface((x, y, w, h))
+    # def _get_frame(self):
+    #     w, h = self.frame_size
+    #     x = self.image_color * w
+    #     y = self.image_off * h
+    #     return self.base_image.subsurface((x, y, w, h))
 
     def update(self):
         # 毎フレーム四方八方に攻撃
@@ -519,9 +576,11 @@ class Bomb(pygame.sprite.Sprite):
         #         Bomb.IMAGE_HEIGHT,
         #     )
         # )
-        self.image_off = (self.image_off + 1) % Bomb.IMAGE_OFFSET
-        self.image = self.frames[self.image_off]
-        self.rect = self.image.get_rect(center=self.rect.center)
+        # 無敵爆弾はアニメーションしない
+        if not self.invincible:
+            self.image_off = (self.image_off + 1) % Bomb.IMAGE_OFFSET
+            self.image = self.frames[self.image_off]
+            self.rect = self.image.get_rect(center=self.rect.center)
 
 
 class Point(pygame.sprite.Sprite):
@@ -563,9 +622,9 @@ class Point(pygame.sprite.Sprite):
 
 
 class HPBarSprite(pygame.sprite.Sprite):
-    def __init__(self, dragon, pos=(SCREEN.centerx - 100, 8), size=(200, 20)):
+    def __init__(self, demon, pos=(SCREEN.centerx - 100, 8), size=(200, 20)):
         super().__init__(self.containers)
-        self.dragon = dragon
+        self.demon = demon
         self.pos = pos
         self.size = size
         self.font = pygame.font.SysFont(None, 20)
@@ -578,7 +637,7 @@ class HPBarSprite(pygame.sprite.Sprite):
         w, h = self.size
         self.image.fill((0, 0, 0, 0))
         pygame.draw.rect(self.image, (180, 180, 180), (x, y, w, h))
-        hp_ratio = max(0, self.dragon.hp / self.dragon.MAX_HP)
+        hp_ratio = max(0, self.demon.hp / self.demon.MAX_HP)
         if hp_ratio > 0.5:
             bar_color = (0, 255, 0)
         elif hp_ratio > 0.2:
@@ -588,7 +647,7 @@ class HPBarSprite(pygame.sprite.Sprite):
         pygame.draw.rect(self.image, bar_color, (x, y, int(w * hp_ratio), h))
         pygame.draw.rect(self.image, (0, 0, 0), (x, y, w, h), 2)
         hp_text = self.font.render(
-            f"Dragon HP: {self.dragon.hp}/{self.dragon.MAX_HP}", True, (0, 0, 0)
+            f"Demon HP: {self.demon.hp}/{self.demon.MAX_HP}", True, (0, 0, 0)
         )
         text_rect = hp_text.get_rect(center=(w // 2, h // 2))
         self.image.blit(hp_text, text_rect)
