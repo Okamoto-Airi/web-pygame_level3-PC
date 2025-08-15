@@ -224,7 +224,7 @@ async def main():
     #     GAMEOVER: load_image("gameover.png"),  # ゲームオーバー画像
     #     CLEAR: load_image("gameclear.png"),  # クリア画像
     # }
-    title_msg = load_image("opening-logo.png")  # タイトル画像
+    title_msg = load_image("opning_logo_white.png")  # タイトル画像
     opening_sound = load_sound("bgm_maoudamashii_healing08.ogg")  # タイトルBGM
     opening_sound.set_volume(0.03)  # 音量調整
     opening_sound.play(-1)  # ループ再生
@@ -302,24 +302,24 @@ async def main():
         # クリア時はスコアを表示
         if game_status == CLEAR:
             font = pygame.font.Font("font/Bungee-Regular.ttf", 60)  # フォント設定
-            game_msg = font.render("GAME CLEAR!", True, (255, 0, 0))
+            game_msg = font.render("GAME CLEAR!", True, (0, 255, 0))
             screen.blit(game_msg, (SCREEN.centerx - 200, SCREEN.centery - 100))
             calculate_score_and_rank(
                 screen, time_left, Majo.life.val, pygame.font.SysFont(None, 48)
             )
             rq_font = pygame.font.SysFont(None, 48)
-            text1 = rq_font.render("Restart (R) / Exit Game (Q)", True, (0, 0, 0))
+            text1 = rq_font.render("Restart (R) / Exit Game (Q)", True, (255, 255, 255))
             screen.blit(text1, (SCREEN.centerx - 200, SCREEN.centery + 100))
         elif game_status == GAMEOVER:
             font = pygame.font.Font("font/Bungee-Regular.ttf", 60)  # フォント設定
-            game_msg = font.render("GAME OVER", True, (0, 0, 255))
+            game_msg = font.render("GAME OVER", True, (255, 0, 0))
             screen.blit(game_msg, (SCREEN.centerx - 180, SCREEN.centery - 100))
             # # ゲームオーバー時はスコアを表示
             # calculate_score_and_rank(
             #     screen, time_left, Majo.life.val, pygame.font.SysFont(None, 48)
             # )
             rq_font = pygame.font.SysFont(None, 48)
-            text1 = rq_font.render("Restart (R) / Exit Game (Q)", True, (0, 0, 0))
+            text1 = rq_font.render("Restart (R) / Exit Game (Q)", True, (255, 255, 255))
             screen.blit(text1, (SCREEN.centerx - 200, SCREEN.centery))
 
         # タイトル時はメッセージ画像を表示
