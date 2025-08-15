@@ -217,10 +217,11 @@ class Demon(pygame.sprite.Sprite):
     EXP_IMAGE_OFFSET = 8  # 爆発アニメのコマ数
     EXP_ANIME_COUNT = 10  # 爆発アニメの繰り返し回数
 
-    def __init__(self):
+    def __init__(self, enemy):
         # スプライトの初期化（所属グループに登録）
         # self.containersはmain.pyでSpriteグループとしてセットされる
         pygame.sprite.Sprite.__init__(self, self.containers)
+        self.enemy = enemy  # 敵キャラクター（サブ敵）
         self.image = load_image("demon-king_small.png")
         self.rect = self.image.get_rect()  # 位置情報
         self.center = SCREEN.center  # 初期位置（画面中央）
@@ -278,7 +279,7 @@ class Demon(pygame.sprite.Sprite):
                 (1, 1),
             ]
             dx, dy = random.choice(directions)
-            Bomb(self, dx * Bomb.SPEED, dy * Bomb.SPEED)
+            Bomb(self, dx, dy)
         elif random.random() < Demon.BOMB_PROB:
             # 30%の確率で無敵爆弾
             invincible = random.random() < 0.3
@@ -294,7 +295,7 @@ class Demon(pygame.sprite.Sprite):
                 (1, 1),
             ]
             dx, dy = random.choice(directions)
-            Bomb(self, dx * Bomb.SPEED, dy * Bomb.SPEED, invincible=invincible)
+            Bomb(self, dx, dy, invincible=invincible)
 
         # 魔王の爆破シーン（スコア0で爆発アニメ＆消滅）
         if self.hp == 0:
@@ -307,6 +308,15 @@ class Demon(pygame.sprite.Sprite):
                 Demon.exp_sound,
             )
             self.kill()
+            Explosion(
+                Demon.exp_images,
+                self.enemy.rect.center,
+                (Demon.EXP_IMAGE_WIDTH, Demon.EXP_IMAGE_HEIGHT),
+                Demon.EXP_IMAGE_OFFSET,
+                Demon.EXP_ANIME_COUNT,
+                Demon.exp_sound,
+            )
+            self.enemy.kill()
             return
 
 
@@ -433,7 +443,7 @@ class Bomb(pygame.sprite.Sprite):
 
     IMAGE_COLORS, IMAGE_OFFSET = 4, 3  # 爆弾の色数とアニメコマ数
     # IMAGE_WIDTH, IMAGE_HEIGHT = 112, 64  # 1コマの幅・高さ（ピクセル）
-    SPEED = random.randint(3, 7)  # 爆弾の落下速度（ピクセル/フレーム）
+    # SPEED = random.randint(3, 7)  # 爆弾の落下速度（ピクセル/フレーム）
     # 爆発アニメ
     EXP_IMAGE_WIDTH, EXP_IMAGE_HEIGHT = (
         120,
@@ -472,6 +482,7 @@ class Bomb(pygame.sprite.Sprite):
         self.invincible = invincible  # 無敵爆弾フラグ
         self.dx = dx
         self.dy = dy
+        self.speed = random.randint(3, 6)  # 爆弾の落下速度（ピクセル/フレーム）
         # 爆弾の色をランダムで決定（4色）
         self.image_color = int(random.random() * Bomb.IMAGE_COLORS)
         self.image_off = 0  # アニメーション用オフセット
@@ -586,7 +597,7 @@ class Bomb(pygame.sprite.Sprite):
 
     def update(self):
         # 毎フレーム四方八方に攻撃
-        self.rect.move_ip(self.dx, self.dy)
+        self.rect.move_ip(self.dx * self.speed, self.dy * self.speed)
         # 画面外に出たら爆発
         if (
             self.rect.left < SCREEN.left

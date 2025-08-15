@@ -361,8 +361,8 @@ async def main():
                 # タイトル画面でスペースキーでゲーム開始
                 if event.key == K_SPACE and game_status == INIT:
                     game_status = PLAY  # プレイ状態へ
-                    demon = Demon()  # 魔王生成
                     enemy = EdgeRunner(speed=4, clockwise=False)  # サブ敵生成
+                    demon = Demon(enemy)  # 魔王生成
                     enemy_g.add(enemy)
                     # 魔王のHPバー用スプライト
                     hp_bar_sprite = HPBarSprite(demon)
@@ -377,8 +377,8 @@ async def main():
                     enemy.kill()  # 既存サブ敵削除
                     majo.kill()  # 既存魔女削除
                     hp_bar_sprite.kill()  # 既存HPバー削除
-                    demon = Demon()  # 新魔王生成
                     enemy = EdgeRunner(speed=4, clockwise=False)  # サブ敵生成
+                    demon = Demon(enemy)  # 新魔王生成
                     enemy_g.add(enemy)
                     hp_bar_sprite = HPBarSprite(demon)
                     hp_bar_sprite.update()  # HPバー更新
