@@ -257,7 +257,7 @@ async def main():
 
     BEAM_COOLDOWN = 150  # 発射間隔（ミリ秒）
     BEAM_BURST_LIMIT = 2  # 連続発射数
-    BEAM_BURST_COOLDOWN = 500  # 2発撃った後のクールタイム（ミリ秒）
+    BEAM_BURST_COOLDOWN = 800  # 2発撃った後のクールタイム（ミリ秒）
 
     last_beam_time = 0  # 直近の発射時刻
     burst_count = 0
