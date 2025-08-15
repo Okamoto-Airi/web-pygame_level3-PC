@@ -24,7 +24,7 @@ class Background:
     def __init__(self, majo):
         # self.majo = majo  # 魔女インスタンス。魔女の位置に応じて山の表示を動かす。
         self.sky_image = load_image(
-            "bg_natural_sky.jpg", SCREEN.size
+            "bg_image.jpg", SCREEN.size
         )  # 空の画像を画面サイズで読み込み
         # self.mount_image = load_image(
         #     "bg_natural_mount_800x800.png"
