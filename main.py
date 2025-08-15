@@ -246,7 +246,7 @@ async def main():
         pat="●○",  # ライフ表示パターン
     )
 
-    Beam.counter = Counter(initval=0, maxval=2)  # ビーム発射回数カウンタ
+    Beam.counter = Counter(initval=0, maxval=6)  # ビーム発射回数カウンタ
 
     # 魔女・背景のインスタンス生成
     majo = Majo()  # 魔女キャラクター生成
@@ -255,9 +255,9 @@ async def main():
 
     start_ticks = pygame.time.get_ticks()  # ゲーム開始時の時刻（ミリ秒）
 
-    BEAM_COOLDOWN = 300  # 発射間隔（ミリ秒）
+    BEAM_COOLDOWN = 150  # 発射間隔（ミリ秒）
     BEAM_BURST_LIMIT = 2  # 連続発射数
-    BEAM_BURST_COOLDOWN = 1000  # 2発撃った後のクールタイム（ミリ秒）
+    BEAM_BURST_COOLDOWN = 500  # 2発撃った後のクールタイム（ミリ秒）
 
     last_beam_time = 0  # 直近の発射時刻
     burst_count = 0

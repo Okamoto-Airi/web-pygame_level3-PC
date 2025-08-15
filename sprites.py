@@ -309,7 +309,7 @@ class Demon(pygame.sprite.Sprite):
             self.kill()
             return
 
-
+# 周りを周回する敵
 class EdgeRunner(pygame.sprite.Sprite):
     def __init__(self, speed=3, clockwise=True):
         super().__init__(self.containers)
@@ -320,8 +320,8 @@ class EdgeRunner(pygame.sprite.Sprite):
         self.clockwise = clockwise
 
         # 初期位置（左上から下へ）
-        self.rect.topleft = (0, 0)
-        self.state = 1  # 0=右, 1=下, 2=左, 3=上
+        self.rect.topleft = (440, 0)
+        self.state = 2  # 0=右, 1=下, 2=左, 3=上
 
     def update(self):
         screen_rect = pygame.Rect((0, 40, 640, 440))
