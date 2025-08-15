@@ -433,7 +433,7 @@ class Bomb(pygame.sprite.Sprite):
 
     IMAGE_COLORS, IMAGE_OFFSET = 4, 3  # 爆弾の色数とアニメコマ数
     # IMAGE_WIDTH, IMAGE_HEIGHT = 112, 64  # 1コマの幅・高さ（ピクセル）
-    SPEED = 5  # 爆弾の落下速度（ピクセル/フレーム）
+    SPEED = random.randint(3, 7)  # 爆弾の落下速度（ピクセル/フレーム）
     # 爆発アニメ
     EXP_IMAGE_WIDTH, EXP_IMAGE_HEIGHT = (
         120,
