@@ -324,7 +324,7 @@ async def main():
 
         # タイトル時はメッセージ画像を表示
         elif game_status == INIT:
-            screen.blit(title_msg, (100, 150))  # メッセージ画像描画
+            screen.blit(title_msg, (100, 110))  # メッセージ画像描画
 
         # 画面の内容を更新（ダブルバッファリング）
         pygame.display.update()  # 画面更新

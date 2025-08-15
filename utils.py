@@ -64,22 +64,23 @@ def calculate_score_and_rank(screen, time_left, life_val, font):
     if final_score >= 500:
         # rank = "GOLD"
         screen.blit(
-            load_image("rank_Gold.png"), (SCREEN.centerx - 100, SCREEN.centery + 30)
+            load_image("rank_Gold.png"), (SCREEN.centerx - 100, SCREEN.centery + 40)
         )
     elif final_score >= 300:
         # rank = "SILVER"
         screen.blit(
-            load_image("rank_Silver.png"), (SCREEN.centerx - 100, SCREEN.centery + 30)
+            load_image("rank_Silver.png"), (SCREEN.centerx - 100, SCREEN.centery + 40)
         )
     elif final_score >= 100:
         # rank = "BRONZE"
         screen.blit(
-            load_image("rank_Bronze.png"), (SCREEN.centerx - 110, SCREEN.centery + 30)
+            load_image("rank_Bronze.png"), (SCREEN.centerx - 110, SCREEN.centery + 40)
         )
     # else:
     #     rank = "NONE"
 
     score_img = font.render(f"FINAL SCORE: {final_score}", True, (245, 127, 23))
+    pygame.draw.rect(screen, (220, 220, 220), (SCREEN.centerx - 160, SCREEN.centery - 10, 310, 40))
     screen.blit(score_img, (SCREEN.centerx - 150, SCREEN.centery - 10))
     # rank_img = font.render(f"RANK: {rank}", True, (245, 127, 23))
     # screen.blit(rank_img, (SCREEN.centerx - 100, SCREEN.centery + 20))
