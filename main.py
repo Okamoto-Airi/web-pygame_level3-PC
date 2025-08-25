@@ -78,16 +78,6 @@ def collision_detection(majo, demon, beam_g, bomb_g, enemy_g):
     # group_collided: {爆弾: [当たったビーム, ...], ...}
     if group_collided:
         for bomb, beams in group_collided.items():
-            # for beam in beams:
-            #     # 爆発エフェクト生成
-            #     Explosion(
-            #         Beam.exp_images,
-            #         bomb.rect.center,
-            #         (Beam.EXP_IMAGE_WIDTH, Beam.EXP_IMAGE_HEIGHT),
-            #         Beam.EXP_IMAGE_OFFSET,
-            #         Beam.EXP_ANIME_COUNT,
-            #         Beam.exp_sound,
-            #     )
             if getattr(bomb, "invincible", False):
                 # 無敵爆弾は何もしない
                 continue
@@ -192,25 +182,20 @@ async def main():
 
     # 制限時間
     TIME_LIMIT = 60  # 制限時間（秒）
-    # time_left = TIME_LIMIT  # 残り時間
-    # time_font = pygame.font.SysFont(None, 32)  # 残り時間表示用フォント
     timer_sprite = TimerSprite(TIME_LIMIT, pos=(SCREEN.left + 10, 10))
 
     # 各種画像・サウンドの読み込みと設定
     Beam.sound = load_sound("se_maoudamashii_se_ignition01.ogg")  # ビーム発射音
     Beam.sound.set_volume(0.03)  # ビーム発射音の音量調整（0.0～1.0）
-    # Beam.image = load_image("majo_beam_right.png")  # ビーム画像
     Beam.images = {
         (1, 0): load_image("majo_beam_right.png"),
         (-1, 0): load_image("majo_beam_left.png"),
         (0, -1): load_image("majo_beam_up.png"),
         (0, 1): load_image("majo_beam_down.png"),
     }
-    # Dragon.images = load_image("dragon_small.png", (128, 128))  # UFO画像
     Demon.exp_images = load_image("ufo_fire.png", (320, 960))  # UFO爆発画像
     Demon.exp_sound = load_sound("se_maoudamashii_explosion08.ogg")  # UFO爆発音
     Demon.exp_sound.set_volume(0.03)  # UFO爆発音の音量調整（0.0～1.0）
-    # Bomb.images = load_image("ufo_bomb_left.png")  # 爆弾画像
     Bomb.exp_images = load_image("bomb_fire.png")  # 爆弾爆発画像
     Bomb.exp_sound = load_sound("se_maoudamashii_explosion05.ogg")  # 爆弾爆発音
     Bomb.exp_sound.set_volume(0.03)  # 爆弾爆発音の音量調整（0.0～1.0）
@@ -218,12 +203,6 @@ async def main():
     Beam.exp_sound = load_sound("se_maoudamashii_explosion04.ogg")  # ビーム爆発音
     Beam.exp_sound.set_volume(0.03)  # ビーム爆発音の音量調整（0.0～1.0）
 
-    # # タイトル・ゲームオーバー・クリア画面用画像の辞書
-    # title_msg = {
-    #     INIT: load_image("opening-logo.png"),  # タイトル画像
-    #     GAMEOVER: load_image("gameover.png"),  # ゲームオーバー画像
-    #     CLEAR: load_image("gameclear.png"),  # クリア画像
-    # }
     title_msg = load_image("opning_logo_white.png")  # タイトル画像
     opening_sound = load_sound("bgm_maoudamashii_healing08.ogg")  # タイトルBGM
     opening_sound.set_volume(0.03)  # 音量調整
@@ -231,9 +210,7 @@ async def main():
     play_sound = load_sound("bgm_maoudamashii_fantasy15.ogg")  # プレイ中BGM
     play_sound.set_volume(0.03)  # 音量調整
     gameclear_sound = load_sound("clear.ogg")
-    # gameclear_sound.set_volume(0.03)  # クリア音の音量調整
     gameover_sound = load_sound("gameover.ogg")
-    # gameover_sound.set_volume(0.15)  # ゲームオーバー
 
     # スコア・ライフなどの初期化
     Majo.life = Score(
@@ -250,7 +227,7 @@ async def main():
 
     # 魔女・背景のインスタンス生成
     majo = Majo()  # 魔女キャラクター生成
-    bg_img = Background(majo)  # 背景生成（魔女の参照渡し）
+    bg_img = Background()  # 背景生成
     demon = None  # 魔王はゲーム開始時に生成するため、初期値はNone
 
     start_ticks = pygame.time.get_ticks()  # ゲーム開始時の時刻（ミリ秒）
@@ -267,8 +244,6 @@ async def main():
         # 画面を白でクリア
         screen.fill((255, 255, 255))  # 背景色を白に設定
 
-        # 背景・スプライトの位置情報を更新
-        # bg_img.update()  # 背景の更新
         group.update()  # 全スプライトの更新
 
         # 衝突判定（ゲームプレイ中かつ魔王が存在する場合のみ）
@@ -279,25 +254,11 @@ async def main():
         bg_img.draw(screen)  # 背景描画
         group.draw(screen)  # スプライト描画
 
-        # # 敵のHPバー描画（魔王がいる場合のみ）
-        # if dragon and game_status == PLAY:
-        #     draw_hp_bar(screen, dragon, pos=(SCREEN.centerx - 100, 8))
-
         # 制限時間の計算と表示
         if game_status == PLAY:
             elapsed_sec = (pygame.time.get_ticks() - start_ticks) // 1000  # 経過秒数
             time_left = max(0, TIME_LIMIT - elapsed_sec)  # 残り時間
-            # 残り時間を画面左上に表示
-            # timer_img = time_font.render(f"TIME: {time_left}", True, (0, 0, 0))
-            # screen.blit(timer_img, (SCREEN.left + 10, 10))
             timer_sprite.val = time_left  # 残り秒数を更新
-
-            # # 時間切れでゲームオーバー
-            # if time_left == 0:
-            #     game_status = GAMEOVER
-            #     play_sound.stop()
-            #     # opening_sound.play(-1)
-            #     gameover_sound.play()  # ゲームオーバー音再生
 
         # クリア時はスコアを表示
         if game_status == CLEAR:
@@ -314,10 +275,6 @@ async def main():
             font = pygame.font.Font("font/Bungee-Regular.ttf", 60)  # フォント設定
             game_msg = font.render("GAME OVER", True, (255, 0, 0))
             screen.blit(game_msg, (SCREEN.centerx - 180, SCREEN.centery - 100))
-            # # ゲームオーバー時はスコアを表示
-            # calculate_score_and_rank(
-            #     screen, time_left, Majo.life.val, pygame.font.SysFont(None, 48)
-            # )
             rq_font = pygame.font.SysFont(None, 48)
             text1 = rq_font.render("Restart (R) / Exit Game (Q)", True, (255, 255, 255))
             screen.blit(text1, (SCREEN.centerx - 200, SCREEN.centery))
@@ -334,30 +291,22 @@ async def main():
         if game_status == PLAY and (Majo.life.val == 0 or time_left == 0):
             game_status = GAMEOVER  # ゲームオーバー状態へ
             play_sound.stop()  # プレイBGM停止
-            # opening_sound.play(-1)  # タイトルBGM再生
             gameover_sound.play()  # ゲームオーバー音再生
         # 魔王スコアが0になったらクリア
         if game_status == PLAY and demon.hp == 0:
             game_status = CLEAR  # クリア状態へ
             play_sound.stop()  # プレイBGM停止
-            # opening_sound.play(-1)  # タイトルBGM再生
             gameclear_sound.play()  # クリア音再生
 
         # イベント処理（キー入力・ウィンドウ操作など）
         for event in pygame.event.get():
             if event.type == QUIT:
-                # pygame.mixer.music.stop()
                 stop_all_sounds(opening_sound, play_sound)
                 pygame.quit()  # Pygame終了
                 await asyncio.sleep(0.1)  # 0.1秒待つ（音停止の反映待ち
                 # sys.exit()  # プログラム終了
                 # js.eval("window.close()")
             elif event.type == KEYDOWN:
-
-                # # プレイ中にスペースキーでビーム発射
-                # if event.key == K_SPACE and game_status == PLAY:
-                #     if Beam.counter.val < Beam.counter.maxval and (fire_dx != 0 or fire_dy != 0):
-                #         Beam(majo, fire_dx, fire_dy)
                 # タイトル画面でスペースキーでゲーム開始
                 if event.key == K_SPACE and game_status == INIT:
                     game_status = PLAY  # プレイ状態へ
@@ -384,15 +333,13 @@ async def main():
                     hp_bar_sprite.update()  # HPバー更新
                     majo = Majo()  # 新魔女生成
                     Majo.life.reset()  # ライフリセット
-                    # opening_sound.stop()  # タイトルBGM停止
                     gameclear_sound.stop()  # クリア音停止
                     gameover_sound.stop()  # ゲームオーバー音停止
                     play_sound.play(-1)  # プレイBGM再生
-                    bg_img = Background(majo)  # 背景再生成
+                    bg_img = Background()  # 背景再生成
                     start_ticks = pygame.time.get_ticks()  # タイマーリセット
                 # ゲームオーバー・クリア画面でQキーでゲーム終了
                 elif event.key == K_q and game_status in (GAMEOVER, CLEAR):
-                    # pygame.mixer.music.stop()
                     stop_all_sounds(opening_sound, play_sound)
                     pygame.quit()  # Pygame終了
                     await asyncio.sleep(0.1)  # 0.1秒待つ（音停止の反映待ち）

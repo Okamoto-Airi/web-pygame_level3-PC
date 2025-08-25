@@ -9,42 +9,6 @@ import os  # ファイルパス結合などに使用
 SCREEN = pygame.Rect((0, 0, 640, 480))  # 画面サイズを矩形で定義
 
 
-# def draw_hp_bar(screen, dragon, pos=(100, 50), size=(200, 20), font=None):
-#     """
-#     敵のHPゲージを描画（文字付き）
-#     :param screen: 描画先
-#     :param dragon: HP情報を持つ敵（例：Dragonクラスのインスタンス）
-#     :param pos: 描画位置 (x, y)
-#     :param size: バーサイズ (width, height)
-#     :param font: pygame.font.Font オブジェクト（省略時は自動生成）
-#     """
-#     x, y = pos
-#     w, h = size
-
-#     # 背景（灰色）
-#     pygame.draw.rect(screen, (180, 180, 180), (x, y, w, h))
-
-#     # HP比率に応じた色（段階的）
-#     hp_ratio = max(0, dragon.hp / dragon.MAX_HP)
-#     if hp_ratio > 0.5:
-#         bar_color = (0, 255, 0)  # 緑
-#     elif hp_ratio > 0.2:
-#         bar_color = (240, 240, 0)  # 黄
-#     else:
-#         bar_color = (255, 0, 0)  # 赤
-#     pygame.draw.rect(screen, bar_color, (x, y, int(w * hp_ratio), h))
-
-#     # 枠線（黒）
-#     pygame.draw.rect(screen, (0, 0, 0), (x, y, w, h), 2)
-
-#     # HP数値の文字（中央に描画）
-#     if font is None:
-#         font = pygame.font.SysFont(None, 20)
-#     hp_text = font.render(f"Dragon HP: {dragon.hp}/{dragon.MAX_HP}", True, (0, 0, 0))
-#     text_rect = hp_text.get_rect(center=(x + w // 2, y + h // 2))
-#     screen.blit(hp_text, text_rect)
-
-
 def calculate_score_and_rank(screen, time_left, life_val, font):
     """
     残り時間とライフからスコアとランクを計算し、スコア画像・ランク画像を返す。
@@ -62,28 +26,21 @@ def calculate_score_and_rank(screen, time_left, life_val, font):
     final_score = time_score + life_score
 
     if final_score >= 500:
-        # rank = "GOLD"
         screen.blit(
             load_image("rank_Gold.png"), (SCREEN.centerx - 100, SCREEN.centery + 40)
         )
     elif final_score >= 300:
-        # rank = "SILVER"
         screen.blit(
             load_image("rank_Silver.png"), (SCREEN.centerx - 100, SCREEN.centery + 40)
         )
     elif final_score >= 100:
-        # rank = "BRONZE"
         screen.blit(
             load_image("rank_Bronze.png"), (SCREEN.centerx - 110, SCREEN.centery + 40)
         )
-    # else:
-    #     rank = "NONE"
 
     score_img = font.render(f"FINAL SCORE: {final_score}", True, (245, 127, 23))
     pygame.draw.rect(screen, (220, 220, 220), (SCREEN.centerx - 160, SCREEN.centery - 10, 310, 40))
     screen.blit(score_img, (SCREEN.centerx - 150, SCREEN.centery - 10))
-    # rank_img = font.render(f"RANK: {rank}", True, (245, 127, 23))
-    # screen.blit(rank_img, (SCREEN.centerx - 100, SCREEN.centery + 20))
 
     text1 = font.render("Restart (R) / Exit Game (Q)", True, (0, 0, 0))
     screen.blit(text1, (SCREEN.centerx - 200, SCREEN.centery + 100))
@@ -160,7 +117,6 @@ class Score(Counter, pygame.sprite.Sprite):
     """
 
     FONT_SIZE = 28  # フォントサイズ
-    # BLUE = (0, 0, 255)  # 青色（デフォルト）
     RED = (255, 0, 0)  # 赤色
 
     def __init__(
