@@ -47,9 +47,17 @@ class Majo(pygame.sprite.Sprite):
         # スプライトの初期化（所属グループに登録）
         # self.containersはmain.pyでSpriteグループとしてセットされる
         pygame.sprite.Sprite.__init__(self, self.containers)
-        self.image = load_image(
-            "majo_level2_small.png"
-        )  # 魔女のスプライト画像
+
+        # self.image = load_image(
+        #     "majo_level3_left.png"
+        # )  # 魔女のスプライト画像
+
+        # 画像を方向ごとに保持
+        self.images = {
+            "left": load_image("majo_level3_left.png"),
+            "right": load_image("majo_level3_right.png"),
+        }
+        self.image = self.images["right"]  # 初期画像
         # 位置情報（pygame.Rect）を初期化
         self.rect = pygame.Rect((0, 0, Majo.IMAGE_WIDTH, Majo.IMAGE_HEIGHT))
         self.rect.left = SCREEN.left  # 画面左に配置
@@ -58,10 +66,12 @@ class Majo(pygame.sprite.Sprite):
 
     def move_left(self, obstacles):
         # 左キーが押されたときの移動処理
+        self.image = self.images["left"]  # 左画像に切り替え
         self.move(obstacles, -Majo.SPEED, 0)  # 画像（アニメーション）更新
 
     def move_right(self, obstacles):
         # 右キーが押されたときの移動処理
+        self.image = self.images["right"]  # 右画像に切り替え
         self.move(obstacles, Majo.SPEED, 0)  # 画像（アニメーション）更新
 
     def move_up(self, obstacles):
