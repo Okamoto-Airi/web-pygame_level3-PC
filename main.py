@@ -369,28 +369,26 @@ async def main():
 
         # キー入力による魔女の移動処理
         pressed_keys = pygame.key.get_pressed()  # 押されているキー取得
-        if pressed_keys[K_DOWN]:  # 下キー
+        if pressed_keys[K_s]:  # Sキー(下)
             majo.move_down(obstacles)  # 魔女を下に移動
-        elif pressed_keys[K_UP]:  # 上キー
+        elif pressed_keys[K_w]:  # Wキー(上)
             majo.move_up(obstacles)  # 魔女を上に移動
-        elif pressed_keys[K_LEFT]:
+        elif pressed_keys[K_a]:  # Aキー(右)
             majo.move_left(obstacles)
-        elif pressed_keys[K_RIGHT]:
+        elif pressed_keys[K_d]:  # Dキー(左)
             majo.move_right(obstacles)
 
-        # WASDで発射方向を決定
-        if pressed_keys[K_w]:
+        # 上下左右キーで発射方向付き攻撃
+        if pressed_keys[K_UP]:
             fire_dx, fire_dy = 0, -1
-        elif pressed_keys[K_s]:
+        elif pressed_keys[K_DOWN]:
             fire_dx, fire_dy = 0, 1
-        elif pressed_keys[K_a]:
+        elif pressed_keys[K_LEFT]:
             fire_dx, fire_dy = -1, 0
-        elif pressed_keys[K_d]:
+        elif pressed_keys[K_RIGHT]:
             fire_dx, fire_dy = 1, 0
-        # スペースキーでビーム発射
         if (
-            pressed_keys[K_SPACE]
-            and game_status == PLAY
+            game_status == PLAY
             and Beam.counter.val < Beam.counter.maxval
             and (fire_dx != 0 or fire_dy != 0)
             and not in_burst_cooldown
