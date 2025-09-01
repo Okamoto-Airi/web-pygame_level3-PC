@@ -155,7 +155,7 @@ async def main():
     # 画面の初期設定
     pygame.init()  # Pygameの初期化
     screen = pygame.display.set_mode(SCREEN.size)  # 画面サイズの設定
-    pygame.display.set_caption("Animation")  # ウィンドウタイトルの設定
+    pygame.display.set_caption("Pygame - Stage 3")  # ウィンドウタイトルの設定
 
     # ゲームステータスの定数定義
     INIT, PLAY, CLEAR, GAMEOVER = 1, 2, 3, 4  # ゲーム状態の定数
