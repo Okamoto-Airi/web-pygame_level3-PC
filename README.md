@@ -10,7 +10,7 @@ Pygameを使って制作したシューティングゲームです。
 
 以下のリンクから遊べます！
 
-[シューティングゲーム レベル3](https://okamoto-airi.github.io/web-pygame_level3_PC/)
+[シューティングゲーム レベル3](https://okamoto-airi.github.io/web-pygame_level3-PC/)
 
 ## 特徴
 
@@ -39,7 +39,7 @@ Pygameを使って制作したシューティングゲームです。
 
 ## Webブラウザでの動作
 
-[pygbag](https://github.com/pygame-web/pygbag) を利用してWebAssembly化し、ブラウザ上でも動作します。
+[pygbag](https://github.com/pygame-web/pygbag) を利用してWebAssembly化し、ブラウザ上で動作します。
 
 GitHub Actionsで自動ビルド・デプロイに対応しています。
 
