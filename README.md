@@ -52,7 +52,7 @@ GitHub Actionsで自動ビルド・デプロイに対応しています。
 ## 実行方法
 
 ```sh
-pip install pygame pygbag
+pip install pygame pygbag asyncio
 python -m pygbag .
 ```
 
